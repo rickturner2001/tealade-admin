@@ -54,7 +54,6 @@ model User {
     emailVerified DateTime?
     image         String?
     accounts      Account[]
-    isAdmin       Boolean
     sessions      Session[]
 }
 

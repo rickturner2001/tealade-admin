@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useRef } from "react";
@@ -23,15 +24,16 @@ const SignIn = () => {
     return <div></div>;
   }
 
-  const handleSubmission = () => {
-    // Get the value of the input element
+  const handleSubmission = async () => {
     const emailValue = emailRef?.current?.input?.value;
     if (emailValue) {
-      signIn("email", {
+      await signIn("email", {
         email: emailValue,
-      }).catch((e) => console.error(e));
-
-      localStorage.setItem("emailVerification", emailValue);
+      });
+      localStorage.setItem(
+        "emailVerification",
+        JSON.stringify(emailValue ?? "")
+      );
     }
   };
 
