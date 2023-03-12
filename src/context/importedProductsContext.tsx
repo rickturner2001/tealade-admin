@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
+import type { Shipment, ShopSection } from "@prisma/client";
 import { type Dispatch, type SetStateAction, createContext } from "react";
-import type { PrettyShipment, PrettyVariant, ProductWithTags } from "~/types";
+import type { PrettyVariant, ProductWithTags } from "~/types";
 
 interface ImportedProductsContextValue {
   product: ProductWithTags;
@@ -9,24 +10,31 @@ interface ImportedProductsContextValue {
   productSection: string;
   defaultThumbnail: string;
   imagesSet: string[];
-  shipments: PrettyShipment[];
+  shipments: Shipment[];
   variants: PrettyVariant[];
   setProductName: Dispatch<SetStateAction<string>>;
   setProductDescription: Dispatch<SetStateAction<string>>;
   setDefaultThumbnail: Dispatch<SetStateAction<string>>;
-  setImagesSet: Dispatch<SetStateAction<string[]>>;
+  section: string;
   setSection: Dispatch<SetStateAction<string>>;
-  setShipments: Dispatch<SetStateAction<PrettyShipment[]>>;
-  setVariants: Dispatch<SetStateAction<PrettyVariant[]>>;
+  setImagesSet: Dispatch<SetStateAction<string[]>>;
+  setShipments: Dispatch<SetStateAction<Shipment[]>>;
   setMargin: Dispatch<SetStateAction<number>>;
+  setVariants: Dispatch<SetStateAction<PrettyVariant[]>>;
   margin: number;
 }
 
 export const ImportedProductsContext =
   createContext<ImportedProductsContextValue>({
+    section: "",
     defaultThumbnail: "",
     imagesSet: [],
     product: {
+      sections: [],
+      category: {
+        cid: "",
+        label: "",
+      },
       categoryId: "",
       defaultThumbnail: "",
       description: "",
@@ -46,14 +54,15 @@ export const ImportedProductsContext =
     productSection: "",
     shipments: [],
     margin: 0,
-    setMargin: () => {},
 
     variants: [],
     setDefaultThumbnail: () => {},
+    setMargin: () => {},
     setImagesSet: () => {},
     setProductDescription: () => {},
     setProductName: () => {},
     setSection: () => {},
+
     setShipments: () => {},
     setVariants: () => {},
   });

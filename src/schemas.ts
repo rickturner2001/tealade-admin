@@ -8,6 +8,7 @@ export const productRegistrationSchema = z.object({
   isImport: z.boolean(),
   sectionId: z.string().nullable(),
   categoryId: z.string(),
+  categoryLabel: z.string(),
   variants: z
     .object({
       vid: z.string(),
@@ -21,7 +22,7 @@ export const productRegistrationSchema = z.object({
   defaultThumbnail: z.string(),
   imageSet: z.string().array(),
   shipments: z
-    .object({ courier: z.string(), est: z.string(), price: z.number() })
+    .object({ courier: z.string(), est: z.string(), cost: z.number() })
     .array(),
 });
 
@@ -42,7 +43,7 @@ export const productCopyUpdateSchema = z.object({
 
 // Estimated time is a string, since ranges (n - n) default to a string
 const productShipment = z.object({
-  price: z.number(),
+  cost: z.number(),
   courier: z.string(),
   est: z.string(),
 });

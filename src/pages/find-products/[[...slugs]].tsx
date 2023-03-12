@@ -53,9 +53,9 @@ const ListingWrapper = ({
     >
       <>
         <Divider />
-        <Space className="w-full  justify-end" align="center">
+        <div className="flex w-full justify-center">
           <CategoriesDropdown />
-        </Space>
+        </div>
 
         <Divider />
 

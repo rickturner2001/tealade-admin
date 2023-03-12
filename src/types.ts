@@ -1,4 +1,5 @@
 import type {
+  Category,
   Discount,
   Product,
   ProductTag,
@@ -28,61 +29,61 @@ export type CjProduct = {
   createTime: null;
 };
 
+export type CJProductSpecifics = {
+  addMarkStatus: number;
+  categoryId: string;
+  categoryName: string;
+  createrTime: string;
+  description: string;
+  entryCode: string;
+  entryName: string;
+  entryNameEn: string;
+  listedNum: number;
+  materialKey: string;
+  materialKeySet: string[];
+  materialName: string;
+  materialNameEn: string;
+  materialNameEnSet: string[];
+  materialNameSet: string[];
+  packingKey: string;
+  packingKeySet: string[];
+  packingName: string;
+  packingNameEn: string;
+  packingNameEnSet: string[];
+  packingNameSet: string[];
+  packingWeight: string;
+  pid: string;
+  productImage: string;
+  productImageSet: NonEmptyArray<string>;
+  productKey: string;
+  productKeyEn: string;
+  productKeySet: string[];
+  productName: string;
+  productNameEn: string;
+  productNameSet: string[];
+  productPro: string;
+  productProEn: string;
+  productProEnSet: string[];
+  productProSet: string[];
+  productSku: string;
+  productType: string;
+  productUnit: null;
+  productVideo: string;
+  productWeight: string;
+  sellPrice: string;
+  sourceFrom: number;
+  status: string;
+  suggestSellPrice: string;
+  supplierId: null;
+  supplierName: null;
+  variants: NonEmptyArray<CjProductVariant>;
+};
+
 export type CjResponseProductSpecifics = {
   code: number;
   result: true;
   message: string;
-  data:
-    | undefined
-    | {
-        addMarkStatus: number;
-        categoryId: string;
-        categoryName: string;
-        createrTime: string;
-        description: string;
-        entryCode: string;
-        entryName: string;
-        entryNameEn: string;
-        listedNum: number;
-        materialKey: string;
-        materialKeySet: string[];
-        materialName: string;
-        materialNameEn: string;
-        materialNameEnSet: string[];
-        materialNameSet: string[];
-        packingKey: string;
-        packingKeySet: string[];
-        packingName: string;
-        packingNameEn: string;
-        packingNameEnSet: string[];
-        packingNameSet: string[];
-        packingWeight: string;
-        pid: string;
-        productImage: string;
-        productImageSet: NonEmptyArray<string>;
-        productKey: string;
-        productKeyEn: string;
-        productKeySet: string[];
-        productName: string;
-        productNameEn: string;
-        productNameSet: string[];
-        productPro: string;
-        productProEn: string;
-        productProEnSet: string[];
-        productProSet: string[];
-        productSku: string;
-        productType: string;
-        productUnit: null;
-        productVideo: string;
-        productWeight: string;
-        sellPrice: string;
-        sourceFrom: number;
-        status: string;
-        suggestSellPrice: string;
-        supplierId: null;
-        supplierName: null;
-        variants: NonEmptyArray<CjProductVariant>;
-      };
+  data: undefined | CJProductSpecifics;
   requestId: string;
 };
 
@@ -109,10 +110,17 @@ export type CjProductVariant = {
 };
 
 export type ProductWithTags = Product & {
+  sections: ShopSection[];
+  category: Category;
   tags: ProductTag[];
   variants: ProductVariant[];
   shipments: Shipment[];
 };
+
+export type ProductWithShipmentAndVariants = Omit<
+  ProductWithTags,
+  "tags" | "sections"
+>;
 
 export type StoreProductIncludeAll = Product & {
   discount: Discount | null;

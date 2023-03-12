@@ -4,14 +4,22 @@ import {
   Form,
   Image,
   Input,
+  Typography,
   type InputRef,
   Select,
   Spin,
+  Space,
 } from "antd";
 import TextArea from "antd/lib/input/TextArea";
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { api } from "~/utils/api";
 import { ImportedProductsContext } from "~/context/importedProductsContext";
+import TagsContainer from "./TagsContainer";
+import ShipmentSelection from "../product/ShipmentsSelection";
+import { ProductVariant } from "@prisma/client";
+
+const { Title, Text, Paragraph } = Typography;
+
 const GeneralProductTab = () => {
   const { data: sections } = api.sections.getAllSections.useQuery();
   const {
@@ -21,14 +29,35 @@ const GeneralProductTab = () => {
     productName,
     setProductDescription,
     productSection,
-    setSection,
+    setImagesSet,
+    setDefaultThumbnail,
     productDescription,
+    setShipments,
+    setSection,
+    section,
+    shipments,
     imagesSet,
     variants,
   } = useContext(ImportedProductsContext);
+
+  useEffect(() => {
+    setDefaultThumbnail(product.defaultThumbnail);
+    setProductName(product.name);
+    setImagesSet(product.imageSet);
+
+    setShipments(product.shipments);
+    setProductDescription(product.description);
+  }, [
+    product,
+    setDefaultThumbnail,
+    setProductDescription,
+    setImagesSet,
+    setProductName,
+  ]);
+
   const utils = api.useContext();
   const { mutate: registerProduct, isLoading: loadingRegistration } =
-    api.products.registerProduct.useMutation({
+    api.products.pushProductToImports.useMutation({
       onSuccess: async () => {
         await utils.products.getAllImportedProducts.invalidate();
       },
@@ -39,28 +68,102 @@ const GeneralProductTab = () => {
         await utils.products.getAllImportedProducts.invalidate();
       },
     });
-  const { mutate: addNewTag, isLoading: loadingTag } =
-    api.products.createProductTag.useMutation({
-      onSuccess: async () => {
-        await utils.products.getAllImportedProducts.invalidate();
-      },
-    });
-  const { mutate: removeTag, isLoading: loadingRemoveTag } =
-    api.products.deleteProductTag.useMutation({
-      onSuccess: async () => {
-        await utils.products.getAllImportedProducts.invalidate();
-      },
-    });
-  const labelRef = useRef<InputRef>(null);
   return (
-    <div className="flex w-full flex-col items-center gap-4 md:flex-row">
-      {" "}
+    <div className="flex w-full flex-col items-center gap-12 md:flex-row">
       <Image
-        className="w-full max-w-xs"
+        className="w-full max-w-md"
         src={product.defaultThumbnail}
         alt={product.name}
       />{" "}
-      <Form name="form_product" layout="vertical" className="w-full">
+      <Space direction="vertical" className="flex w-full" size={"middle"}>
+        <Title
+          className="block"
+          editable={{
+            onChange: (e) => {
+              setProductName(e);
+            },
+          }}
+        >
+          {productName}
+        </Title>
+        <Paragraph
+          ellipsis
+          editable={{ onChange: (e) => setProductDescription(e) }}
+          className="block  w-full max-w-lg"
+        >
+          {productDescription}
+        </Paragraph>
+
+        <Divider />
+        <TagsContainer />
+        <div className="w-full">
+          {sections ? (
+            <Select
+              className="w-full"
+              defaultValue={
+                productSection !== "" ? productSection : "Select a section"
+              }
+              onChange={(e) => setSection(e)}
+              options={sections.map((section) => {
+                return { label: section.label, value: section.id };
+              })}
+            />
+          ) : (
+            <Spin />
+          )}
+        </div>
+        <div className="flex w-full flex-col justify-end gap-2 md:flex-row">
+          <Button
+            danger
+            type="primary"
+            className="w-full md:w-max"
+            loading={loadingRemoval}
+            onClick={() => removeProduct({ pid: product.pid })}
+          >
+            Remove product
+          </Button>
+          <Button
+            loading={loadingRegistration}
+            type="primary"
+            className=" w-full bg-blue-500 md:w-max"
+            onClick={() => {
+              registerProduct({
+                isImport: false,
+                isStore: true,
+
+                description: productDescription,
+                imageSet: imagesSet,
+                name: productName,
+                defaultThumbnail: product.defaultThumbnail,
+                categoryId: product.category.cid,
+                shipments: product.shipments.map((ship) => {
+                  return {
+                    courier: ship.courier,
+                    est: ship.est,
+                    cost: ship.cost,
+                  };
+                }),
+                pid: product.pid,
+                categoryLabel: product.category.label,
+                sectionId: productSection,
+                variants: variants.map((variant) => {
+                  return {
+                    height: variant.height,
+                    image: variant.image,
+                    name: variant.name,
+                    price: variant.price + variant.price * (margin / 100),
+                    vid: variant.vid,
+                    width: variant.width,
+                  };
+                }),
+              });
+            }}
+          >
+            Add to imports
+          </Button>
+        </div>
+      </Space>
+      {/* <Form name="form_product" layout="vertical" className="w-full">
         {" "}
         <div className="flex w-full flex-col gap-3 lg:flex-row">
           {" "}
@@ -178,7 +281,7 @@ const GeneralProductTab = () => {
                   return {
                     courier: ship.courier,
                     est: ship.est,
-                    price: ship.cost,
+                    cost: ship.cost,
                   };
                 }),
                 pid: product.pid,
@@ -199,7 +302,7 @@ const GeneralProductTab = () => {
             Add to imports
           </Button>
         </div>
-      </Form>
+      </Form> */}
     </div>
   );
 };

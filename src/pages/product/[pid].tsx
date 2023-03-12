@@ -6,31 +6,31 @@ import {
   Divider,
   Empty,
   Image,
-  Radio,
   Spin,
-  Tabs,
   Card,
   Typography,
 } from "antd";
 import { useRouter } from "next/router";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "~/utils/api";
-import type { ShippingItem } from "~/types";
+import type {
+  CJProductSpecifics,
+  ProductWithShipmentAndVariants,
+} from "~/types";
 import AdminDashboardLayout from "~/components/layout/AdminDashboardLayout";
 import { Meta } from "antd/lib/list/Item";
 import { evaluatePriceRange } from "~/functions";
+import ShipmentSelection from "~/components/product/ShipmentsSelection";
+import type { Shipment } from "@prisma/client";
 
-const { Text, Title } = Typography;
+const { Text, Title, Link } = Typography;
 
 const ProductSpecifics = ({ pid }: { pid: string }) => {
   const { data: productData } = api.products.findOrRequestId.useQuery({ pid });
 
   const utils = api.useContext();
 
-  const [economyShipment, setEconomyShipment] = useState<ShippingItem>();
-  const [regularShipment, setRegularShipment] = useState<ShippingItem>();
-
-  const [shipments, setShipments] = useState<ShippingItem[]>([]);
+  const [shipments, setShipments] = useState<Shipment[]>([]);
 
   const {
     mutate: registerProduct,
@@ -55,9 +55,12 @@ const ProductSpecifics = ({ pid }: { pid: string }) => {
   });
 
   if (!productData || ("data" in productData && !productData.data)) {
-    return <Empty className="mt-12" />;
+    return <Spin className="mt-12" />;
   }
-  const product = "data" in productData ? productData.data : productData;
+  const product:
+    | CJProductSpecifics
+    | ProductWithShipmentAndVariants
+    | undefined = "data" in productData ? productData.data : productData;
 
   if (!product) {
     return <Empty className="mt-12" />;
@@ -100,6 +103,14 @@ const ProductSpecifics = ({ pid }: { pid: string }) => {
           <Title className="">
             {"entryNameEn" in product ? product.entryNameEn : product.name}
           </Title>
+          <br />
+          <Link
+            target="_blank"
+            className="block pb-4"
+            href={`https://www.cjdropshipping.com/product/-p-${pid}.html?from=HTP`}
+          >
+            CJ Dropshipping
+          </Link>
           <Text>
             {"productNameEn" in product
               ? product.productNameEn
@@ -116,90 +127,52 @@ const ProductSpecifics = ({ pid }: { pid: string }) => {
           </Title>
 
           <Divider />
-          <Tabs
-            defaultActiveKey="1"
-            items={[
-              {
-                label: "Economy Shipment",
-                key: "1",
-                children: (
-                  <Radioshipment
-                    setShipments={setShipments}
-                    vid={product.variants[0].vid}
-                    setter={setEconomyShipment}
-                  />
-                ),
-              },
-              {
-                label: "Regular Shipment",
-                key: "2",
-                children: (
-                  <Radioshipment
-                    setShipments={setShipments}
-                    vid={product.variants[0].vid}
-                    setter={setRegularShipment}
-                  />
-                ),
-              },
-            ]}
+          <ShipmentSelection
+            setShipments={setShipments}
+            shipments={shipments}
+            vid={product.variants[0].vid}
+            productShipments={
+              "shipments" in product ? product.shipments : undefined
+            }
           />
           <Divider />
 
           <Button
             loading={isLoading || isLoadingUpdate}
             onClick={() => {
-              if (economyShipment && regularShipment) {
-                if ("productImageSet" in product) {
-                  registerProduct({
-                    categoryId: product.categoryId,
-                    defaultThumbnail: product.productImageSet[0],
-                    sectionId: null,
-                    description: product.productNameEn,
-                    name: product.entryNameEn,
-                    imageSet: product.productImageSet,
-                    pid: product.pid,
-                    shipments: [
-                      {
-                        courier: economyShipment.logisticName,
-                        est: economyShipment.logisticAging,
-                        price: economyShipment.logisticPrice,
-                      },
-                      {
-                        courier: regularShipment.logisticName,
-                        est: regularShipment.logisticName,
-                        price: regularShipment.logisticPrice,
-                      },
-                    ],
-                    isImport: true,
-                    isStore: false,
-                    variants: product.variants.map((variant) => {
-                      return {
-                        height: variant.variantHeight,
-                        image: variant.variantImage,
-                        name: variant.variantNameEn,
-                        price: variant.variantSellPrice,
-                        vid: variant.vid,
-                        width: variant.variantWidth,
-                      };
-                    }),
-                  });
-                } else {
+              if ("productImageSet" in product) {
+                console.log(product.categoryName);
+
+                console.log(product.categoryId);
+                registerProduct({
+                  categoryId: product.categoryId,
+                  defaultThumbnail: product.productImageSet[0],
+                  sectionId: null,
+                  description: product.productNameEn,
+                  name: product.entryNameEn,
+                  imageSet: product.productImageSet,
+                  categoryLabel: product.categoryName,
+                  pid: product.pid,
+                  shipments: shipments,
+                  isImport: true,
+                  isStore: false,
+                  variants: product.variants.map((variant) => {
+                    return {
+                      height: variant.variantHeight,
+                      image: variant.variantImage,
+                      name: variant.variantNameEn,
+                      price: variant.variantSellPrice,
+                      vid: variant.vid,
+                      width: variant.variantWidth,
+                    };
+                  }),
+                });
+              } else {
+                if (shipments.length === 2)
                   updateProductShipment({
                     pid: product.pid,
-                    shipments: [
-                      {
-                        courier: economyShipment.logisticName,
-                        est: economyShipment.logisticAging,
-                        price: economyShipment.logisticPrice,
-                      },
-                      {
-                        courier: regularShipment.logisticName,
-                        est: regularShipment.logisticName,
-                        price: regularShipment.logisticPrice,
-                      },
-                    ],
+                    shipments: shipments,
                   });
-                }
               }
             }}
             block
@@ -258,47 +231,6 @@ const ProductSpecifics = ({ pid }: { pid: string }) => {
         </div>
       </div>
     </>
-  );
-};
-
-const Radioshipment = ({
-  vid,
-  setter,
-  setShipments,
-}: {
-  vid: string;
-  setter: Dispatch<SetStateAction<ShippingItem | undefined>>;
-  setShipments: Dispatch<SetStateAction<ShippingItem[]>>;
-}) => {
-  const { data: shipmentData } = api.cjApi.requestShipmentByVid.useQuery({
-    vid,
-  });
-
-  useEffect(() => {
-    if (shipmentData && shipmentData.data) {
-      setShipments(shipmentData.data);
-    }
-  }, [shipmentData, setShipments]);
-
-  if (!shipmentData || !shipmentData?.data) {
-    return <Spin />;
-  }
-
-  const shipments = shipmentData.data;
-
-  return (
-    <Radio.Group
-      onChange={(e) => {
-        const shipment = shipments[+e.target.value];
-        if (shipment) setter(shipment);
-      }}
-      options={shipments.map((ship, idx) => {
-        return {
-          label: `$${ship.logisticPrice} (${ship.logisticAging} days)`,
-          value: idx,
-        };
-      })}
-    />
   );
 };
 

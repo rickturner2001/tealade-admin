@@ -17,7 +17,7 @@ const CategoriesDropdown = () => {
   if (categories) {
     return (
       <Select
-        className="w-full max-w-sm truncate overflow-ellipsis"
+        className="w-full max-w-lg  "
         defaultValue={
           category
             ? categories.filter((cat) => cat.cid === category)[0]?.label ??

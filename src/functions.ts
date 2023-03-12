@@ -27,7 +27,9 @@ export const requestProductList = async (
   return cjJsonresponse;
 };
 
-export const requestProductById = async (pid: string) => {
+export const requestProductById = async (
+  pid: string
+): Promise<CjResponseProductSpecifics> => {
   const response = await fetch(
     `https://developers.cjdropshipping.com/api2.0/v1/product/query?pid=${pid}`,
     {

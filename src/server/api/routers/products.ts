@@ -9,6 +9,8 @@ import {
   productTagSchema,
   productThumbnailupdateSchema,
 } from "~/schemas";
+import { ProductWithShipmentAndVariants } from "~/types";
+import { Shipment } from "@prisma/client";
 
 export const productRouter = createTRPCRouter({
   // CREATE
@@ -77,6 +79,66 @@ export const productRouter = createTRPCRouter({
         }
       }
     }),
+  pushProductToImports: protectedProcedure
+    .input(productRegistrationSchema)
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.prisma.product.update({
+        where: {
+          pid: input.pid,
+        },
+        data: {
+          defaultThumbnail: input.defaultThumbnail,
+          isImport: input.isImport,
+          isStore: input.isStore,
+          description: input.description,
+          name: input.name,
+          sections: input.sectionId
+            ? {
+                connect: {
+                  id: input.sectionId,
+                },
+              }
+            : undefined,
+          imageSet: input.imageSet,
+          category: {
+            connectOrCreate: {
+              where: {
+                cid: input.categoryId,
+              },
+              create: {
+                cid: input.categoryId,
+                label: input.categoryLabel,
+              },
+            },
+          },
+
+          variants: {
+            updateMany: input.variants.map((variant) => {
+              return {
+                where: {
+                  vid: variant.vid,
+                },
+                data: {
+                  price: variant.price,
+                },
+              };
+            }),
+          },
+
+          shipments: {
+            createMany: {
+              data: input.shipments.map((shipment) => {
+                return {
+                  cost: shipment.cost,
+                  courier: shipment.courier,
+                  est: shipment.est,
+                };
+              }),
+            },
+          },
+        },
+      });
+    }),
 
   registerProduct: protectedProcedure
     .input(productRegistrationSchema)
@@ -97,7 +159,17 @@ export const productRouter = createTRPCRouter({
               }
             : undefined,
           imageSet: input.imageSet,
-          categoryId: input.categoryId,
+          category: {
+            connectOrCreate: {
+              where: {
+                cid: input.categoryId,
+              },
+              create: {
+                cid: input.categoryId,
+                label: input.categoryLabel,
+              },
+            },
+          },
 
           variants: {
             connectOrCreate: input.variants.map((variant) => {
@@ -121,7 +193,7 @@ export const productRouter = createTRPCRouter({
             createMany: {
               data: input.shipments.map((shipment) => {
                 return {
-                  cost: shipment.price,
+                  cost: shipment.cost,
                   courier: shipment.courier,
                   est: shipment.est,
                 };
@@ -135,14 +207,17 @@ export const productRouter = createTRPCRouter({
   findOrRequestId: protectedProcedure
     .input(productPidSchema)
     .query(async ({ ctx, input }) => {
-      const product = await ctx.prisma.product.findUnique({
-        where: {
-          pid: input.pid,
-        },
-        include: {
-          variants: true,
-        },
-      });
+      const product: ProductWithShipmentAndVariants | null =
+        await ctx.prisma.product.findUnique({
+          where: {
+            pid: input.pid,
+          },
+          include: {
+            variants: true,
+            category: true,
+            shipments: true,
+          },
+        });
 
       if (product) {
         return product;
@@ -193,6 +268,7 @@ export const productRouter = createTRPCRouter({
       },
       include: {
         tags: true,
+        category: true,
         variants: true,
         shipments: true,
       },
@@ -274,7 +350,11 @@ export const productRouter = createTRPCRouter({
           shipments: {
             deleteMany: {},
             create: input.shipments.map((ship) => {
-              return { cost: ship.price, courier: ship.courier, est: ship.est };
+              return {
+                cost: ship.cost,
+                courier: ship.courier,
+                est: ship.est,
+              } as Shipment;
             }),
           },
         },

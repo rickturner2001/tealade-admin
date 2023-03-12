@@ -7,6 +7,8 @@ import GeneralProductTab from "./GeneralProductTab";
 import VariantsProductTab from "./VariantsProductTab";
 import ImagesProductTab from "./ImageProductTab";
 import Link from "next/link";
+import RevisionProductTab from "./RevisionProductTab";
+import { Shipment } from "@prisma/client";
 
 const TabMenu = ({ product }: { product: ProductWithTags }) => {
   const [productName, setProductName] = useState(product.name);
@@ -33,9 +35,13 @@ const TabMenu = ({ product }: { product: ProductWithTags }) => {
   const [margin, setMargin] = useState(0);
 
   const [productSection, setProductSection] = useState("");
-  const [shipments, setShipments] = useState<PrettyShipment[]>(
+  const [shipments, setShipments] = useState<Shipment[]>(
     product.shipments.map((ship) => {
-      return { courier: ship.courier, est: ship.est, price: ship.cost };
+      return {
+        courier: ship.courier,
+        est: ship.est,
+        cost: ship.cost,
+      } as Shipment;
     })
   );
   return (
@@ -50,13 +56,14 @@ const TabMenu = ({ product }: { product: ProductWithTags }) => {
         productName: productName,
         productSection: productSection,
         setProductDescription: setProductDescription,
-        setProductName: setProductName,
+        section: productSection,
         setSection: setProductSection,
+        setMargin: setMargin,
+        setProductName: setProductName,
         setShipments: setShipments,
         setVariants: setVariants,
         shipments: shipments,
         margin: margin,
-        setMargin: setMargin,
         variants: variants,
       }}
     >

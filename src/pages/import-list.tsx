@@ -2,6 +2,7 @@ import { Divider, Col, Skeleton, Spin, Empty, Button } from "antd";
 import BreadcrumbItem from "antd/lib/breadcrumb/BreadcrumbItem";
 import AdminDashboardLayout from "~/components/layout/AdminDashboardLayout";
 import TabMenu from "~/components/tabMenu/TabMenu";
+import { ProductWithTags } from "~/types";
 import { api } from "~/utils/api";
 const ImportList = () => {
   const { data: products } = api.products.getAllImportedProducts.useQuery();
@@ -27,7 +28,9 @@ const ImportList = () => {
         ) : (
           <Col className="mx-auto max-w-7xl gap-8 space-y-8">
             {products.map((prod) => {
-              return <TabMenu key={prod.pid} product={prod} />;
+              return (
+                <TabMenu key={prod.pid} product={prod as ProductWithTags} />
+              );
             })}
           </Col>
         )}
